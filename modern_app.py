@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt, QThread, Signal, QUrl
 from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFrame,
+    QApplication, QButtonGroup, QCheckBox, QComboBox, QDialog, QFileDialog, QFrame,
     QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
     QProgressBar, QScrollArea, QSizePolicy, QSplitter, QListWidget, QListWidgetItem,
     QVBoxLayout, QWidget,
@@ -411,9 +411,18 @@ QWidget { background:#111318; color:#edf0f6; font-family:'Segoe UI'; font-size:1
 QMainWindow { background:#0c0e12; }
 QFrame#panel, QFrame#queueCard { background:#171a21; border:1px solid #2a2f3a; border-radius:12px; }
 QFrame#mediaCard, QFrame#optionsCard { background:#13161c; border:1px solid #282e38; border-radius:12px; }
+QFrame#downloadHero { background:#141821; border:none; border-bottom:1px solid #2a303b; border-top-left-radius:12px; border-top-right-radius:12px; }
+QFrame#downloadConfig { background:#171b23; border:none; }
+QFrame#actionBar { background:#171b23; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
+QFrame#divider { background:#2a303b; border:none; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#202631; border:1px solid #333b49; border-radius:9px; padding:9px 8px; font-weight:600; }
+QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#355de8; color:white; border-color:#355de8; }
+QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#667080; background:#171b23; border-color:#252c37; }
+QPushButton#secondaryAction { background:#242a35; border:1px solid #3a4250; border-radius:10px; font-weight:600; }
+
 QFrame#checksPanel { background:#0f1217; border:1px solid #252b35; border-radius:9px; }
 QLabel#eyebrow { color:#7d8ba3; font-size:8pt; font-weight:700; letter-spacing:1px; }
-QComboBox { min-height:28px; }
+QComboBox { min-height:30px; }
 QFrame#playlistRow { background:#151820; border:1px solid #282e38; border-radius:10px; }
 QFrame#playlistRow:hover { background:#1d222c; border-color:#3a4352; }
 QLabel#playlistThumb { background:#0b0d11; border:1px solid #303744; border-radius:7px; color:#7f899a; font-weight:700; }
@@ -444,9 +453,18 @@ QWidget { background:#f4f6fa; color:#171a21; font-family:'Segoe UI'; font-size:1
 QMainWindow { background:#eef1f6; }
 QFrame#panel, QFrame#queueCard { background:white; border:1px solid #d8dde7; border-radius:12px; }
 QFrame#mediaCard, QFrame#optionsCard { background:#f9fafc; border:1px solid #dce1ea; border-radius:12px; }
+QFrame#downloadHero { background:#f7f9fc; border:none; border-bottom:1px solid #dce2eb; border-top-left-radius:12px; border-top-right-radius:12px; }
+QFrame#downloadConfig { background:white; border:none; }
+QFrame#actionBar { background:white; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
+QFrame#divider { background:#e1e5ec; border:none; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#f5f7fa; border:1px solid #ccd3de; border-radius:9px; padding:9px 8px; font-weight:600; }
+QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#315fe8; color:white; border-color:#315fe8; }
+QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#a3aaba; background:#f6f7f9; border-color:#e1e5ec; }
+QPushButton#secondaryAction { background:#f5f7fa; border:1px solid #cbd2de; border-radius:10px; font-weight:600; }
+
 QFrame#checksPanel { background:#f3f6fa; border:1px solid #dce1ea; border-radius:9px; }
 QLabel#eyebrow { color:#7a8495; font-size:8pt; font-weight:700; letter-spacing:1px; }
-QComboBox { min-height:28px; }
+QComboBox { min-height:30px; }
 QFrame#playlistRow { background:#ffffff; border:1px solid #dce1ea; border-radius:10px; }
 QFrame#playlistRow:hover { background:#f6f8fb; border-color:#c6cedb; }
 QLabel#playlistThumb { background:#e9edf3; border:1px solid #ccd2dd; border-radius:7px; color:#697386; font-weight:700; }
@@ -567,104 +585,134 @@ class MainWindow(QMainWindow):
 
         right = self.panel()
         right.setMinimumWidth(430)
+        right.setMaximumWidth(500)
         r = QVBoxLayout(right)
-        r.setContentsMargins(14, 14, 14, 14)
-        r.setSpacing(12)
+        r.setContentsMargins(0, 0, 0, 0)
+        r.setSpacing(0)
 
-        media = QFrame()
-        media.setObjectName("mediaCard")
-        media_layout = QVBoxLayout(media)
-        media_layout.setContentsMargins(12, 12, 12, 12)
-        media_layout.setSpacing(9)
+        hero = QFrame()
+        hero.setObjectName("downloadHero")
+        hero_layout = QVBoxLayout(hero)
+        hero_layout.setContentsMargins(16, 16, 16, 14)
+        hero_layout.setSpacing(10)
 
-        eyebrow = QLabel("SELECTED ITEM")
-        eyebrow.setObjectName("eyebrow")
-        media_layout.addWidget(eyebrow)
+        hero_top = QHBoxLayout()
+        hero_top.addWidget(self.label("Ready to download", "section"))
+        hero_top.addStretch()
+        self.selected_meta = QLabel("No item selected")
+        self.selected_meta.setObjectName("muted")
+        hero_top.addWidget(self.selected_meta)
+        hero_layout.addLayout(hero_top)
 
-        self.thumb = QLabel("Select an item to preview")
+        self.thumb = QLabel("Select a video from the playlist")
         self.thumb.setObjectName("thumbnail")
         self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumb.setFixedHeight(215)
+        self.thumb.setFixedHeight(205)
         self.thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        media_layout.addWidget(self.thumb)
+        hero_layout.addWidget(self.thumb)
 
-        self.selected_title = QLabel("No item selected")
+        self.selected_title = QLabel("Choose an item to see its preview")
         self.selected_title.setObjectName("previewTitle")
         self.selected_title.setWordWrap(True)
-        self.selected_title.setMinimumHeight(44)
-        media_layout.addWidget(self.selected_title)
-        r.addWidget(media)
+        self.selected_title.setMinimumHeight(42)
+        hero_layout.addWidget(self.selected_title)
+        r.addWidget(hero)
 
-        options_card = QFrame()
-        options_card.setObjectName("optionsCard")
-        ol = QVBoxLayout(options_card)
-        ol.setContentsMargins(12, 12, 12, 12)
-        ol.setSpacing(9)
+        config = QFrame()
+        config.setObjectName("downloadConfig")
+        cl = QVBoxLayout(config)
+        cl.setContentsMargins(16, 14, 16, 14)
+        cl.setSpacing(12)
 
-        options_head = QHBoxLayout()
-        options_head.addWidget(self.label("Download settings", "section"))
-        options_head.addStretch()
-        hint = QLabel("Best quality by default")
-        hint.setObjectName("muted")
-        options_head.addWidget(hint)
-        ol.addLayout(options_head)
+        cl.addWidget(self.label("Download as", "fieldLabel"))
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(6)
+        self.mode_group = QButtonGroup(self)
+        self.mode_group.setExclusive(True)
+        self.mode_buttons = {}
+        for idx, text in enumerate(["Video + audio", "Video only", "Audio only"]):
+            btn = QPushButton(text)
+            btn.setCheckable(True)
+            btn.setObjectName("choiceChip")
+            if idx == 0:
+                btn.setChecked(True)
+            self.mode_group.addButton(btn)
+            self.mode_buttons[text] = btn
+            mode_row.addWidget(btn, 1)
+        self.mode_group.buttonClicked.connect(self.update_mode_controls)
+        cl.addLayout(mode_row)
 
-        self.mode = QComboBox()
-        self.mode.addItems(["Video + audio", "Video only", "Audio only"])
+        quality_grid = QGridLayout()
+        quality_grid.setHorizontalSpacing(10)
+        quality_grid.setVerticalSpacing(6)
+
+        vlabel = QLabel("Video quality")
+        vlabel.setObjectName("fieldLabel")
+        alabel = QLabel("Audio")
+        alabel.setObjectName("fieldLabel")
+        quality_grid.addWidget(vlabel, 0, 0)
+        quality_grid.addWidget(alabel, 0, 1)
+
         self.video_quality = QComboBox()
         self.video_quality.addItems(["Best available", "2160p / 4K", "1440p", "1080p", "720p", "480p", "360p"])
         self.audio_quality = QComboBox()
         self.audio_quality.addItems(["Best available", "MP3 320 kbps", "MP3 256 kbps", "MP3 192 kbps", "M4A", "Opus", "WAV"])
-        self.container = QComboBox()
-        self.container.addItems(["Automatic", "MKV", "MP4"])
-        self.container.setCurrentText(self.settings.get("container", "Automatic"))
+        quality_grid.addWidget(self.video_quality, 1, 0)
+        quality_grid.addWidget(self.audio_quality, 1, 1)
+        cl.addLayout(quality_grid)
 
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(10)
-        grid.setVerticalSpacing(6)
-        fields = [
-            ("Download", self.mode, 0, 0),
-            ("Output format", self.container, 0, 1),
-            ("Video quality", self.video_quality, 1, 0),
-            ("Audio", self.audio_quality, 1, 1),
-        ]
-        for title, widget, row_index, col_index in fields:
-            field = QVBoxLayout()
-            field.setSpacing(4)
-            label = QLabel(title)
-            label.setObjectName("fieldLabel")
-            field.addWidget(label)
-            field.addWidget(widget)
-            grid.addLayout(field, row_index, col_index)
-        ol.addLayout(grid)
+        cl.addWidget(self.label("Output format", "fieldLabel"))
+        format_row = QHBoxLayout()
+        format_row.setSpacing(6)
+        self.container_group = QButtonGroup(self)
+        self.container_group.setExclusive(True)
+        self.container_buttons = {}
+        current_container = self.settings.get("container", "Automatic")
+        for text in ["Automatic", "MKV", "MP4"]:
+            btn = QPushButton(text)
+            btn.setCheckable(True)
+            btn.setObjectName("formatChip")
+            btn.setChecked(text == current_container)
+            self.container_group.addButton(btn)
+            self.container_buttons[text] = btn
+            format_row.addWidget(btn, 1)
+        if not self.container_group.checkedButton():
+            self.container_buttons["Automatic"].setChecked(True)
+        cl.addLayout(format_row)
 
-        checks = QFrame()
-        checks.setObjectName("checksPanel")
-        checks_layout = QVBoxLayout(checks)
-        checks_layout.setContentsMargins(10, 8, 10, 8)
-        checks_layout.setSpacing(4)
+        divider = QFrame()
+        divider.setObjectName("divider")
+        divider.setFixedHeight(1)
+        cl.addWidget(divider)
 
-        self.folder_box = QCheckBox("Create folder using playlist title")
+        self.folder_box = QCheckBox("Create a folder using the playlist title")
         self.folder_box.setChecked(bool(self.settings.get("playlist_folder", True)))
         self.number_box = QCheckBox("Keep original playlist numbering")
         self.number_box.setChecked(bool(self.settings.get("playlist_numbering", True)))
-        checks_layout.addWidget(self.folder_box)
-        checks_layout.addWidget(self.number_box)
-        ol.addWidget(checks)
-        r.addWidget(options_card)
+        cl.addWidget(self.folder_box)
+        cl.addWidget(self.number_box)
 
-        actions = QHBoxLayout()
-        actions.setSpacing(10)
+        r.addWidget(config)
+
+        action_bar = QFrame()
+        action_bar.setObjectName("actionBar")
+        abl = QHBoxLayout(action_bar)
+        abl.setContentsMargins(16, 12, 16, 16)
+        abl.setSpacing(8)
+
         add = QPushButton("Add to queue")
-        add.setMinimumHeight(40)
+        add.setObjectName("secondaryAction")
+        add.setMinimumHeight(44)
         add.clicked.connect(self.add_to_queue)
+
         go = QPushButton("Download now")
         go.setObjectName("primary")
-        go.setMinimumHeight(40)
+        go.setMinimumHeight(44)
         go.clicked.connect(self.download_now)
-        actions.addWidget(add, 1)
-        actions.addWidget(go, 1)
-        r.addLayout(actions)
+
+        abl.addWidget(add, 1)
+        abl.addWidget(go, 1)
+        r.addWidget(action_bar)
         r.addStretch()
 
         split.addWidget(left)
@@ -730,7 +778,9 @@ class MainWindow(QMainWindow):
             return
         self.load_btn.setEnabled(False)
         self.preview_title.setText("Loading preview…")
-        self.table.setRowCount(0)
+        self.playlist.clear()
+        self.playlist_rows = []
+        self.statusBar().showMessage("Reading playlist…")
         self.inspect_worker = InspectWorker(url, self.settings.get("cookie_file", ""))
         self.inspect_worker.loaded.connect(self.preview_loaded)
         self.inspect_worker.failed.connect(self.preview_failed)
@@ -791,6 +841,7 @@ class MainWindow(QMainWindow):
 
         entry = self.preview["entries"][row]
         self.selected_title.setText(entry.get("title") or "Selected item")
+        self.selected_meta.setText(f"#{entry.get('index', row + 1)}  •  {format_duration(entry.get('duration'))}")
         url = entry.get("thumbnail")
         if not url:
             self.thumb.setPixmap(QPixmap())
@@ -830,10 +881,10 @@ class MainWindow(QMainWindow):
         return {
             "title": self.preview["title"],
             "url": self.preview["url"],
-            "mode": self.mode.currentText(),
+            "mode": self.current_mode(),
             "video_quality": self.video_quality.currentText(),
             "audio_quality": self.audio_quality.currentText(),
-            "container": self.container.currentText(),
+            "container": self.current_container(),
             "output_dir": self.settings.get("output_dir", default_downloads()),
             "cookie_file": self.settings.get("cookie_file", ""),
             "playlist_items": selected,
@@ -844,6 +895,23 @@ class MainWindow(QMainWindow):
             "progress": 0,
             "detail": "Waiting",
         }
+
+    def current_mode(self):
+        button = self.mode_group.checkedButton()
+        return button.text() if button else "Video + audio"
+
+    def current_container(self):
+        button = self.container_group.checkedButton()
+        return button.text() if button else "Automatic"
+
+    def update_mode_controls(self):
+        mode = self.current_mode()
+        self.video_quality.setEnabled(mode != "Audio only")
+        self.audio_quality.setEnabled(mode != "Video only")
+        enabled_container = mode != "Audio only"
+        for button in self.container_buttons.values():
+            button.setEnabled(enabled_container)
+
 
     def add_to_queue(self):
         try:
@@ -863,7 +931,7 @@ class MainWindow(QMainWindow):
             QMessageBox.information(self, "Cannot start download", str(exc))
 
     def save_state(self):
-        self.settings["container"] = self.container.currentText()
+        self.settings["container"] = self.current_container()
         self.settings["playlist_folder"] = self.folder_box.isChecked()
         self.settings["playlist_numbering"] = self.number_box.isChecked()
         self.store.save_settings(self.settings)
