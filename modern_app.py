@@ -13,7 +13,7 @@ from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFrame,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
-    QProgressBar, QScrollArea, QSplitter, QTableWidget, QTableWidgetItem,
+    QProgressBar, QScrollArea, QSizePolicy, QSplitter, QTableWidget, QTableWidgetItem,
     QVBoxLayout, QWidget,
 )
 
@@ -374,6 +374,8 @@ QLabel#hero { font-size:22pt; font-weight:700; }
 QLabel#section { font-size:12pt; font-weight:650; }
 QLabel#muted { color:#98a1b2; }
 QLabel#queueTitle { font-weight:600; }
+QLabel#previewTitle { font-weight:600; padding:2px 0 4px 0; }
+QLabel#thumbnail { background:#0b0d11; border:1px solid #2d3340; border-radius:10px; color:#7f899a; }
 QProgressBar { background:#232833; border:none; border-radius:5px; height:9px; }
 QProgressBar::chunk { background:#4f7cff; border-radius:5px; }
 """
@@ -390,6 +392,8 @@ QLabel#hero { font-size:22pt; font-weight:700; }
 QLabel#section { font-size:12pt; font-weight:650; }
 QLabel#muted { color:#6e7788; }
 QLabel#queueTitle { font-weight:600; }
+QLabel#previewTitle { font-weight:600; padding:2px 0 4px 0; }
+QLabel#thumbnail { background:#e9edf3; border:1px solid #ccd2dd; border-radius:10px; color:#697386; }
 QProgressBar { background:#e5e8ef; border:none; border-radius:5px; height:9px; }
 QProgressBar::chunk { background:#315fe8; border-radius:5px; }
 """
@@ -486,12 +490,24 @@ class MainWindow(QMainWindow):
         l.addWidget(self.table, 1)
 
         right = self.panel()
+        right.setMinimumWidth(360)
         r = QVBoxLayout(right)
+        r.setContentsMargins(12, 12, 12, 12)
+        r.setSpacing(6)
         r.addWidget(self.label("Preview & options", "section"))
-        self.thumb = QLabel("Thumbnail preview")
+
+        self.thumb = QLabel("Select an item to preview")
+        self.thumb.setObjectName("thumbnail")
         self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumb.setMinimumHeight(180)
+        self.thumb.setFixedHeight(140)
+        self.thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         r.addWidget(self.thumb)
+
+        self.selected_title = QLabel("No item selected")
+        self.selected_title.setObjectName("previewTitle")
+        self.selected_title.setWordWrap(True)
+        self.selected_title.setMaximumHeight(42)
+        r.addWidget(self.selected_title)
 
         self.mode = QComboBox()
         self.mode.addItems(["Video + audio", "Video only", "Audio only"])
@@ -630,8 +646,11 @@ class MainWindow(QMainWindow):
         row = self.table.currentRow()
         if row < 0 or row >= len(self.preview["entries"]):
             return
-        url = self.preview["entries"][row].get("thumbnail")
+        entry = self.preview["entries"][row]
+        self.selected_title.setText(entry.get("title") or "Selected item")
+        url = entry.get("thumbnail")
         if not url:
+            self.thumb.setPixmap(QPixmap())
             self.thumb.setText("Thumbnail unavailable")
             return
         reply = self.net.get(QNetworkRequest(QUrl(url)))
@@ -643,12 +662,17 @@ class MainWindow(QMainWindow):
                 return
             pix = QPixmap()
             if pix.loadFromData(reply.readAll().data()):
+                target_w = max(260, self.thumb.width() - 8)
+                target_h = self.thumb.height() - 8
                 self.thumb.setPixmap(pix.scaled(
-                    self.thumb.width(), self.thumb.height(),
+                    target_w, target_h,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 ))
                 self.thumb.setText("")
+            else:
+                self.thumb.setPixmap(QPixmap())
+                self.thumb.setText("Thumbnail unavailable")
         finally:
             reply.deleteLater()
 
