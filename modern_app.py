@@ -409,43 +409,49 @@ class QueueCard(QFrame):
 DARK_STYLE = """
 QWidget { background:#111318; color:#edf0f6; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#0c0e12; }
-QFrame#panel, QFrame#queueCard { background:#171a21; border:1px solid #2a2f3a; border-radius:12px; }
+QFrame#panel, QFrame#queueCard { background:#151922; border:1px solid #2b3240; border-radius:12px; }
 QFrame#mediaCard, QFrame#optionsCard { background:#13161c; border:1px solid #282e38; border-radius:12px; }
-QFrame#downloadHero { background:#141821; border:none; border-bottom:1px solid #2a303b; border-top-left-radius:12px; border-top-right-radius:12px; }
-QFrame#downloadConfig { background:#171b23; border:none; }
+QFrame#downloadHero { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #17223a,stop:1 #111722); border:none; border-bottom:1px solid #30405d; border-top-left-radius:12px; border-top-right-radius:12px; }
+QFrame#downloadConfig { background:#161b24; border:none; }
 QFrame#actionBar { background:#171b23; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
 QFrame#divider { background:#2a303b; border:none; }
-QPushButton#choiceChip, QPushButton#formatChip { background:#202631; color:#e9eef8; border:1px solid #333b49; border-radius:9px; padding:9px 8px; min-height:34px; font-weight:600; }
-QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#355de8; color:white; border-color:#355de8; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#202631; color:#dbe3f0; border:1px solid #344055; border-radius:8px; padding:5px 8px; min-height:28px; font-weight:600; }
+QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#5b6cff; color:white; border-color:#7b88ff; }
 QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#667080; background:#171b23; border-color:#252c37; }
-QPushButton#secondaryAction { background:#242a35; border:1px solid #3a4250; border-radius:10px; font-weight:600; }
+QPushButton#secondaryAction { background:#202735; color:#dce5f3; border:1px solid #39475d; border-radius:9px; font-weight:600; padding:6px 12px; }
 
 QFrame#checksPanel { background:#0f1217; border:1px solid #252b35; border-radius:9px; }
 QLabel#eyebrow { color:#7d8ba3; font-size:8pt; font-weight:700; letter-spacing:1px; }
 QComboBox { min-height:30px; }
-QFrame#playlistRow { background:#151820; border:1px solid #282e38; border-radius:10px; }
-QFrame#playlistRow:hover { background:#1d222c; border-color:#3a4352; }
+QFrame#playlistRow { background:#171c26; border:1px solid #2c3443; border-radius:10px; }
+QFrame#playlistRow:hover { background:#1c2431; border-color:#536482; }
 QLabel#playlistThumb { background:#0b0d11; border:1px solid #303744; border-radius:7px; color:#7f899a; font-weight:700; }
 QLabel#playlistTitle { font-weight:600; }
-QLabel#durationPill { background:#252b35; border-radius:8px; padding:4px 6px; color:#cbd2dd; }
-QLabel#fieldLabel { color:#aeb6c5; font-size:9pt; margin-top:2px; }
+QLabel#durationPill { background:#24304a; border:1px solid #344a73; border-radius:8px; padding:4px 6px; color:#bcd2ff; }
+QLabel#fieldLabel { color:#9ba8bb; font-size:9pt; margin-top:2px; }
+QLabel#accentBadge { background:#173b36; color:#63e6c1; border:1px solid #28584f; border-radius:8px; padding:3px 7px; font-size:8pt; font-weight:700; }
+QCheckBox { spacing:8px; color:#dbe3ef; padding:3px 0; }
+QCheckBox::indicator { width:16px; height:16px; border:1px solid #53627a; border-radius:4px; background:#0f141d; }
+QCheckBox::indicator:hover { border-color:#7f8cff; }
+QCheckBox::indicator:checked { background:#5b6cff; border:1px solid #7f8cff; image:none; }
+
 QListWidget#playlist { background:transparent; border:none; padding:2px; }
 QListWidget#playlist::item { background:transparent; border:none; }
 QListWidget#playlist::item:selected { background:transparent; border:none; }
-QLineEdit, QComboBox { background:#101218; border:1px solid #343a46; border-radius:8px; padding:8px 10px; min-height:34px; }
+QLineEdit, QComboBox { background:#0f141d; border:1px solid #344055; border-radius:8px; padding:6px 9px; min-height:28px; }
 QScrollArea#rightScroll { background:transparent; border:none; }
 QWidget#rightContent { background:transparent; }
 QTableWidget { gridline-color:#262b34; }
 QHeaderView::section { background:#171a21; color:#aeb6c5; padding:7px; border:none; }
 QPushButton { background:#252a34; border:1px solid #383f4d; border-radius:8px; padding:8px 13px; }
 QPushButton:hover { background:#303744; }
-QPushButton#primary { background:#4f7cff; color:white; border:none; font-weight:600; }
+QPushButton#primary { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #5b6cff,stop:1 #4a8dff); color:white; border:none; border-radius:9px; font-weight:700; padding:6px 12px; }
 QLabel#hero { font-size:22pt; font-weight:700; }
 QLabel#section { font-size:12pt; font-weight:650; }
 QLabel#muted { color:#98a1b2; }
 QLabel#queueTitle { font-weight:600; }
 QLabel#previewTitle { font-weight:600; padding:2px 0 4px 0; }
-QLabel#thumbnail { background:#0b0d11; border:1px solid #2d3340; border-radius:10px; color:#7f899a; }
+QLabel#thumbnail { background:#0d1119; border:1px solid #354562; border-radius:10px; color:#8491a6; }
 QProgressBar { background:#232833; border:none; border-radius:5px; height:9px; }
 QProgressBar::chunk { background:#4f7cff; border-radius:5px; }
 """
@@ -453,16 +459,16 @@ QProgressBar::chunk { background:#4f7cff; border-radius:5px; }
 LIGHT_STYLE = """
 QWidget { background:#f4f6fa; color:#171a21; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#eef1f6; }
-QFrame#panel, QFrame#queueCard { background:white; border:1px solid #d8dde7; border-radius:12px; }
+QFrame#panel, QFrame#queueCard { background:#ffffff; border:1px solid #d9e0ea; border-radius:12px; }
 QFrame#mediaCard, QFrame#optionsCard { background:#f9fafc; border:1px solid #dce1ea; border-radius:12px; }
-QFrame#downloadHero { background:#f7f9fc; border:none; border-bottom:1px solid #dce2eb; border-top-left-radius:12px; border-top-right-radius:12px; }
+QFrame#downloadHero { background:qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #eef3ff,stop:1 #f8fbff); border:none; border-bottom:1px solid #d6e0f4; border-top-left-radius:12px; border-top-right-radius:12px; }
 QFrame#downloadConfig { background:white; border:none; }
 QFrame#actionBar { background:white; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
 QFrame#divider { background:#e1e5ec; border:none; }
-QPushButton#choiceChip, QPushButton#formatChip { background:#f5f7fa; color:#1f2630; border:1px solid #ccd3de; border-radius:9px; padding:9px 8px; min-height:34px; font-weight:600; }
-QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#315fe8; color:white; border-color:#315fe8; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#f5f7fb; color:#253044; border:1px solid #ccd5e2; border-radius:8px; padding:5px 8px; min-height:28px; font-weight:600; }
+QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#5368f2; color:white; border-color:#5368f2; }
 QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#a3aaba; background:#f6f7f9; border-color:#e1e5ec; }
-QPushButton#secondaryAction { background:#f5f7fa; border:1px solid #cbd2de; border-radius:10px; font-weight:600; }
+QPushButton#secondaryAction { background:#f3f6fb; color:#243149; border:1px solid #cbd5e2; border-radius:9px; font-weight:600; padding:6px 12px; }
 
 QFrame#checksPanel { background:#f3f6fa; border:1px solid #dce1ea; border-radius:9px; }
 QLabel#eyebrow { color:#7a8495; font-size:8pt; font-weight:700; letter-spacing:1px; }
@@ -471,17 +477,23 @@ QFrame#playlistRow { background:#ffffff; border:1px solid #dce1ea; border-radius
 QFrame#playlistRow:hover { background:#f6f8fb; border-color:#c6cedb; }
 QLabel#playlistThumb { background:#e9edf3; border:1px solid #ccd2dd; border-radius:7px; color:#697386; font-weight:700; }
 QLabel#playlistTitle { font-weight:600; }
-QLabel#durationPill { background:#edf1f6; border-radius:8px; padding:4px 6px; color:#566071; }
-QLabel#fieldLabel { color:#6e7788; font-size:9pt; margin-top:2px; }
+QLabel#durationPill { background:#edf2ff; border:1px solid #d6e0ff; border-radius:8px; padding:4px 6px; color:#4860a8; }
+QLabel#fieldLabel { color:#6d7890; font-size:9pt; margin-top:2px; }
+QLabel#accentBadge { background:#e8fbf5; color:#16745f; border:1px solid #c7eee2; border-radius:8px; padding:3px 7px; font-size:8pt; font-weight:700; }
+QCheckBox { spacing:8px; color:#334057; padding:3px 0; }
+QCheckBox::indicator { width:16px; height:16px; border:1px solid #aeb9ca; border-radius:4px; background:#ffffff; }
+QCheckBox::indicator:hover { border-color:#6577ef; }
+QCheckBox::indicator:checked { background:#5368f2; border:1px solid #5368f2; image:none; }
+
 QListWidget#playlist { background:transparent; border:none; padding:2px; }
 QListWidget#playlist::item { background:transparent; border:none; }
 QListWidget#playlist::item:selected { background:transparent; border:none; }
-QLineEdit, QComboBox { background:white; border:1px solid #ccd2dd; border-radius:8px; padding:8px 10px; min-height:34px; }
+QLineEdit, QComboBox { background:white; border:1px solid #ccd6e4; border-radius:8px; padding:6px 9px; min-height:28px; }
 QScrollArea#rightScroll { background:transparent; border:none; }
 QWidget#rightContent { background:transparent; }
 QHeaderView::section { background:#f6f7f9; color:#586173; padding:7px; border:none; }
 QPushButton { background:#f6f7f9; border:1px solid #ccd2dd; border-radius:8px; padding:8px 13px; }
-QPushButton#primary { background:#315fe8; color:white; border:none; font-weight:600; }
+QPushButton#primary { background:qlineargradient(x1:0,y1:0,x2:1,y2:0,stop:0 #5368f2,stop:1 #3b8cff); color:white; border:none; border-radius:9px; font-weight:700; padding:6px 12px; }
 QLabel#hero { font-size:22pt; font-weight:700; }
 QLabel#section { font-size:12pt; font-weight:650; }
 QLabel#muted { color:#6e7788; }
@@ -642,6 +654,14 @@ class MainWindow(QMainWindow):
         cl.setContentsMargins(16, 14, 16, 14)
         cl.setSpacing(12)
 
+        config_head = QHBoxLayout()
+        config_head.addWidget(self.label("Download settings", "section"))
+        config_head.addStretch()
+        ready_badge = QLabel("BEST QUALITY")
+        ready_badge.setObjectName("accentBadge")
+        config_head.addWidget(ready_badge)
+        cl.addLayout(config_head)
+
         cl.addWidget(self.label("Download as", "fieldLabel"))
         mode_row = QHBoxLayout()
         mode_row.setSpacing(6)
@@ -720,12 +740,12 @@ class MainWindow(QMainWindow):
 
         add = QPushButton("Add to queue")
         add.setObjectName("secondaryAction")
-        add.setMinimumHeight(44)
+        add.setMinimumHeight(36)
         add.clicked.connect(self.add_to_queue)
 
         go = QPushButton("Download now")
         go.setObjectName("primary")
-        go.setMinimumHeight(44)
+        go.setMinimumHeight(36)
         go.clicked.connect(self.download_now)
 
         abl.addWidget(add, 1)
