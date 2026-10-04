@@ -7,6 +7,8 @@ python -m pip install --upgrade pyinstaller Pillow
 if errorlevel 1 goto :fail
 python -m PyInstaller --noconfirm --clean --onedir --windowed --name "Video Downloader" --collect-all PIL --add-data "version.txt;." app.py
 if errorlevel 1 goto :fail
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0bundle_dependencies.ps1"
+if errorlevel 1 goto :fail
 set "ISCC=%LOCALAPPDATA%\Programs\Inno Setup 6\ISCC.exe"
 if exist "%ISCC%" goto :have_iscc
 set "ISCC=%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe"
