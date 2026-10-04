@@ -43,11 +43,13 @@ copy /Y "%CD%\.build-cache\bin\ffmpeg.exe" "%CD%\dist\Video Downloader 0.5 Dev\b
 copy /Y "%CD%\.build-cache\bin\ffprobe.exe" "%CD%\dist\Video Downloader 0.5 Dev\bin\ffprobe.exe" >nul
 
 :tools_ready
+set "DEV_EXE=%CD%\dist\Video Downloader 0.5 Dev\Video Downloader 0.5 Dev.exe"
 echo.
 echo Modern development build complete:
 echo %CD%\dist\Video Downloader 0.5 Dev\
+echo Launching development build...
+start "" "%DEV_EXE%"
 popd
-pause
 exit /b 0
 
 :fail
