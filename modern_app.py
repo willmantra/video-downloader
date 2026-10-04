@@ -13,7 +13,7 @@ from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFrame,
     QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
-    QProgressBar, QScrollArea, QSizePolicy, QSplitter, QTableWidget, QTableWidgetItem,
+    QProgressBar, QScrollArea, QSizePolicy, QSplitter, QListWidget, QListWidgetItem,
     QVBoxLayout, QWidget,
 )
 
@@ -331,6 +331,52 @@ class SettingsDialog(QDialog):
         }
 
 
+class PlaylistRow(QFrame):
+    def __init__(self, entry):
+        super().__init__()
+        self.setObjectName("playlistRow")
+        self.entry = entry
+        self.checkbox = QCheckBox()
+        self.checkbox.setChecked(True)
+
+        self.thumb = QLabel(str(entry.get("index", "")))
+        self.thumb.setObjectName("playlistThumb")
+        self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.thumb.setFixedSize(96, 54)
+
+        text_box = QVBoxLayout()
+        text_box.setSpacing(2)
+        title = QLabel(entry.get("title") or "Untitled")
+        title.setObjectName("playlistTitle")
+        title.setWordWrap(False)
+        meta = QLabel(f"#{entry.get('index', '')}   {format_duration(entry.get('duration'))}")
+        meta.setObjectName("muted")
+        text_box.addWidget(title)
+        text_box.addWidget(meta)
+
+        duration = QLabel(format_duration(entry.get("duration")))
+        duration.setObjectName("durationPill")
+        duration.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        duration.setFixedWidth(58)
+
+        row = QHBoxLayout(self)
+        row.setContentsMargins(10, 8, 10, 8)
+        row.setSpacing(10)
+        row.addWidget(self.checkbox)
+        row.addWidget(self.thumb)
+        row.addLayout(text_box, 1)
+        row.addWidget(duration)
+
+    def set_thumbnail(self, pixmap):
+        if pixmap and not pixmap.isNull():
+            self.thumb.setPixmap(pixmap.scaled(
+                self.thumb.width(), self.thumb.height(),
+                Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                Qt.TransformationMode.SmoothTransformation,
+            ))
+            self.thumb.setText("")
+
+
 class QueueCard(QFrame):
     cancel_requested = Signal(int)
 
@@ -364,6 +410,16 @@ DARK_STYLE = """
 QWidget { background:#111318; color:#edf0f6; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#0c0e12; }
 QFrame#panel, QFrame#queueCard { background:#171a21; border:1px solid #2a2f3a; border-radius:12px; }
+QFrame#mediaCard, QFrame#optionsCard { background:#13161c; border:1px solid #282e38; border-radius:10px; }
+QFrame#playlistRow { background:#151820; border:1px solid #282e38; border-radius:10px; }
+QFrame#playlistRow:hover { background:#1d222c; border-color:#3a4352; }
+QLabel#playlistThumb { background:#0b0d11; border:1px solid #303744; border-radius:7px; color:#7f899a; font-weight:700; }
+QLabel#playlistTitle { font-weight:600; }
+QLabel#durationPill { background:#252b35; border-radius:8px; padding:4px 6px; color:#cbd2dd; }
+QLabel#fieldLabel { color:#aeb6c5; font-size:9pt; margin-top:2px; }
+QListWidget#playlist { background:transparent; border:none; padding:2px; }
+QListWidget#playlist::item { background:transparent; border:none; }
+QListWidget#playlist::item:selected { background:transparent; border:none; }
 QLineEdit, QComboBox, QTableWidget { background:#101218; border:1px solid #343a46; border-radius:8px; padding:7px; }
 QTableWidget { gridline-color:#262b34; }
 QHeaderView::section { background:#171a21; color:#aeb6c5; padding:7px; border:none; }
@@ -384,6 +440,16 @@ LIGHT_STYLE = """
 QWidget { background:#f4f6fa; color:#171a21; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#eef1f6; }
 QFrame#panel, QFrame#queueCard { background:white; border:1px solid #d8dde7; border-radius:12px; }
+QFrame#mediaCard, QFrame#optionsCard { background:#f9fafc; border:1px solid #dce1ea; border-radius:10px; }
+QFrame#playlistRow { background:#ffffff; border:1px solid #dce1ea; border-radius:10px; }
+QFrame#playlistRow:hover { background:#f6f8fb; border-color:#c6cedb; }
+QLabel#playlistThumb { background:#e9edf3; border:1px solid #ccd2dd; border-radius:7px; color:#697386; font-weight:700; }
+QLabel#playlistTitle { font-weight:600; }
+QLabel#durationPill { background:#edf1f6; border-radius:8px; padding:4px 6px; color:#566071; }
+QLabel#fieldLabel { color:#6e7788; font-size:9pt; margin-top:2px; }
+QListWidget#playlist { background:transparent; border:none; padding:2px; }
+QListWidget#playlist::item { background:transparent; border:none; }
+QListWidget#playlist::item:selected { background:transparent; border:none; }
 QLineEdit, QComboBox, QTableWidget { background:white; border:1px solid #ccd2dd; border-radius:8px; padding:7px; }
 QHeaderView::section { background:#f6f7f9; color:#586173; padding:7px; border:none; }
 QPushButton { background:#f6f7f9; border:1px solid #ccd2dd; border-radius:8px; padding:8px 13px; }
@@ -466,8 +532,12 @@ class MainWindow(QMainWindow):
         outer.addWidget(link)
 
         split = QSplitter(Qt.Orientation.Horizontal)
+
         left = self.panel()
         l = QVBoxLayout(left)
+        l.setContentsMargins(12, 12, 12, 12)
+        l.setSpacing(8)
+
         lh = QHBoxLayout()
         lh.addWidget(self.label("Playlist / video", "section"))
         lh.addStretch()
@@ -478,36 +548,49 @@ class MainWindow(QMainWindow):
         lh.addWidget(all_btn)
         lh.addWidget(none_btn)
         l.addLayout(lh)
+
         self.preview_title = self.label("Paste a link and load a preview", "muted")
         l.addWidget(self.preview_title)
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels(["Use", "Title", "Length"])
-        self.table.horizontalHeader().setSectionResizeMode(1, self.table.horizontalHeader().ResizeMode.Stretch)
-        self.table.setColumnWidth(0, 55)
-        self.table.setColumnWidth(2, 85)
-        self.table.verticalHeader().setVisible(False)
-        self.table.itemSelectionChanged.connect(self.selection_changed)
-        l.addWidget(self.table, 1)
+
+        self.playlist = QListWidget()
+        self.playlist.setObjectName("playlist")
+        self.playlist.setSpacing(7)
+        self.playlist.setVerticalScrollMode(QListWidget.ScrollMode.ScrollPerPixel)
+        self.playlist.currentRowChanged.connect(self.selection_changed)
+        l.addWidget(self.playlist, 1)
 
         right = self.panel()
-        right.setMinimumWidth(360)
+        right.setMinimumWidth(390)
         r = QVBoxLayout(right)
         r.setContentsMargins(12, 12, 12, 12)
-        r.setSpacing(6)
+        r.setSpacing(9)
         r.addWidget(self.label("Preview & options", "section"))
+
+        media = QFrame()
+        media.setObjectName("mediaCard")
+        media_layout = QVBoxLayout(media)
+        media_layout.setContentsMargins(10, 10, 10, 10)
+        media_layout.setSpacing(7)
 
         self.thumb = QLabel("Select an item to preview")
         self.thumb.setObjectName("thumbnail")
         self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumb.setFixedHeight(140)
+        self.thumb.setFixedHeight(178)
         self.thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        r.addWidget(self.thumb)
+        media_layout.addWidget(self.thumb)
 
         self.selected_title = QLabel("No item selected")
         self.selected_title.setObjectName("previewTitle")
         self.selected_title.setWordWrap(True)
-        self.selected_title.setMaximumHeight(42)
-        r.addWidget(self.selected_title)
+        self.selected_title.setMaximumHeight(44)
+        media_layout.addWidget(self.selected_title)
+        r.addWidget(media)
+
+        options_card = QFrame()
+        options_card.setObjectName("optionsCard")
+        ol = QVBoxLayout(options_card)
+        ol.setContentsMargins(10, 10, 10, 10)
+        ol.setSpacing(5)
 
         self.mode = QComboBox()
         self.mode.addItems(["Video + audio", "Video only", "Audio only"])
@@ -523,15 +606,18 @@ class MainWindow(QMainWindow):
             ("Download", self.mode), ("Video quality", self.video_quality),
             ("Audio", self.audio_quality), ("Output format", self.container),
         ]:
-            r.addWidget(QLabel(title))
-            r.addWidget(widget)
+            label = QLabel(title)
+            label.setObjectName("fieldLabel")
+            ol.addWidget(label)
+            ol.addWidget(widget)
 
         self.folder_box = QCheckBox("Create folder using playlist title")
         self.folder_box.setChecked(bool(self.settings.get("playlist_folder", True)))
         self.number_box = QCheckBox("Keep original playlist numbering")
         self.number_box.setChecked(bool(self.settings.get("playlist_numbering", True)))
-        r.addWidget(self.folder_box)
-        r.addWidget(self.number_box)
+        ol.addWidget(self.folder_box)
+        ol.addWidget(self.number_box)
+        r.addWidget(options_card)
 
         actions = QHBoxLayout()
         add = QPushButton("Add to queue")
@@ -546,7 +632,7 @@ class MainWindow(QMainWindow):
 
         split.addWidget(left)
         split.addWidget(right)
-        split.setSizes([760, 390])
+        split.setSizes([760, 410])
         outer.addWidget(split, 1)
 
         queue_panel = self.panel()
@@ -617,18 +703,39 @@ class MainWindow(QMainWindow):
         self.preview = data
         self.url.setText(data["url"])
         self.preview_title.setText(f"{data['title']}  •  {len(data['entries'])} item(s)")
-        self.table.setRowCount(len(data["entries"]))
-        for row, entry in enumerate(data["entries"]):
-            pick = QTableWidgetItem()
-            pick.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
-            pick.setCheckState(Qt.CheckState.Checked)
-            self.table.setItem(row, 0, pick)
-            self.table.setItem(row, 1, QTableWidgetItem(entry["title"]))
-            self.table.setItem(row, 2, QTableWidgetItem(format_duration(entry.get("duration"))))
+        self.playlist.clear()
+        self.playlist_rows = []
+
+        for entry in data["entries"]:
+            item = QListWidgetItem()
+            item.setSizeHint(self._playlist_item_size())
+            row = PlaylistRow(entry)
+            self.playlist.addItem(item)
+            self.playlist.setItemWidget(item, row)
+            self.playlist_rows.append(row)
+
+            thumb_url = entry.get("thumbnail")
+            if thumb_url:
+                reply = self.net.get(QNetworkRequest(QUrl(thumb_url)))
+                reply.finished.connect(lambda r=reply, w=row: self.playlist_thumbnail_ready(r, w))
+
         if data["entries"]:
-            self.table.selectRow(0)
+            self.playlist.setCurrentRow(0)
+
         self.load_btn.setEnabled(True)
         self.statusBar().showMessage("Preview loaded", 2500)
+
+    def _playlist_item_size(self):
+        from PySide6.QtCore import QSize
+        return QSize(0, 72)
+
+    def playlist_thumbnail_ready(self, reply, row_widget):
+        try:
+            pix = QPixmap()
+            if pix.loadFromData(reply.readAll().data()):
+                row_widget.set_thumbnail(pix)
+        finally:
+            reply.deleteLater()
 
     def preview_failed(self, message):
         self.load_btn.setEnabled(True)
@@ -636,16 +743,15 @@ class MainWindow(QMainWindow):
         QMessageBox.warning(self, "Preview failed", message)
 
     def set_all(self, checked):
-        state = Qt.CheckState.Checked if checked else Qt.CheckState.Unchecked
-        for row in range(self.table.rowCount()):
-            self.table.item(row, 0).setCheckState(state)
+        for row in getattr(self, "playlist_rows", []):
+            row.checkbox.setChecked(checked)
 
-    def selection_changed(self):
+    def selection_changed(self, row):
         if not self.preview:
             return
-        row = self.table.currentRow()
         if row < 0 or row >= len(self.preview["entries"]):
             return
+
         entry = self.preview["entries"][row]
         self.selected_title.setText(entry.get("title") or "Selected item")
         url = entry.get("thumbnail")
@@ -653,16 +759,17 @@ class MainWindow(QMainWindow):
             self.thumb.setPixmap(QPixmap())
             self.thumb.setText("Thumbnail unavailable")
             return
+
         reply = self.net.get(QNetworkRequest(QUrl(url)))
         reply.finished.connect(lambda r=reply, expected=row: self.thumbnail_ready(r, expected))
 
     def thumbnail_ready(self, reply, expected):
         try:
-            if expected != self.table.currentRow():
+            if expected != self.playlist.currentRow():
                 return
             pix = QPixmap()
             if pix.loadFromData(reply.readAll().data()):
-                target_w = max(260, self.thumb.width() - 8)
+                target_w = max(300, self.thumb.width() - 8)
                 target_h = self.thumb.height() - 8
                 self.thumb.setPixmap(pix.scaled(
                     target_w, target_h,
@@ -676,10 +783,11 @@ class MainWindow(QMainWindow):
         finally:
             reply.deleteLater()
 
+
     def make_job(self):
         if not self.preview:
             raise ValueError("Load a preview first.")
-        selected = [row + 1 for row in range(self.table.rowCount()) if self.table.item(row, 0).checkState() == Qt.CheckState.Checked]
+        selected = [idx + 1 for idx, row in enumerate(getattr(self, "playlist_rows", [])) if row.checkbox.isChecked()]
         if not selected:
             raise ValueError("Select at least one item.")
         return {
