@@ -415,7 +415,7 @@ QFrame#downloadHero { background:#141821; border:none; border-bottom:1px solid #
 QFrame#downloadConfig { background:#171b23; border:none; }
 QFrame#actionBar { background:#171b23; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
 QFrame#divider { background:#2a303b; border:none; }
-QPushButton#choiceChip, QPushButton#formatChip { background:#202631; border:1px solid #333b49; border-radius:9px; padding:9px 8px; font-weight:600; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#202631; color:#e9eef8; border:1px solid #333b49; border-radius:9px; padding:9px 8px; min-height:34px; font-weight:600; }
 QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#355de8; color:white; border-color:#355de8; }
 QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#667080; background:#171b23; border-color:#252c37; }
 QPushButton#secondaryAction { background:#242a35; border:1px solid #3a4250; border-radius:10px; font-weight:600; }
@@ -432,7 +432,9 @@ QLabel#fieldLabel { color:#aeb6c5; font-size:9pt; margin-top:2px; }
 QListWidget#playlist { background:transparent; border:none; padding:2px; }
 QListWidget#playlist::item { background:transparent; border:none; }
 QListWidget#playlist::item:selected { background:transparent; border:none; }
-QLineEdit, QComboBox, QTableWidget { background:#101218; border:1px solid #343a46; border-radius:8px; padding:7px; }
+QLineEdit, QComboBox { background:#101218; border:1px solid #343a46; border-radius:8px; padding:8px 10px; min-height:34px; }
+QScrollArea#rightScroll { background:transparent; border:none; }
+QWidget#rightContent { background:transparent; }
 QTableWidget { gridline-color:#262b34; }
 QHeaderView::section { background:#171a21; color:#aeb6c5; padding:7px; border:none; }
 QPushButton { background:#252a34; border:1px solid #383f4d; border-radius:8px; padding:8px 13px; }
@@ -457,7 +459,7 @@ QFrame#downloadHero { background:#f7f9fc; border:none; border-bottom:1px solid #
 QFrame#downloadConfig { background:white; border:none; }
 QFrame#actionBar { background:white; border:none; border-bottom-left-radius:12px; border-bottom-right-radius:12px; }
 QFrame#divider { background:#e1e5ec; border:none; }
-QPushButton#choiceChip, QPushButton#formatChip { background:#f5f7fa; border:1px solid #ccd3de; border-radius:9px; padding:9px 8px; font-weight:600; }
+QPushButton#choiceChip, QPushButton#formatChip { background:#f5f7fa; color:#1f2630; border:1px solid #ccd3de; border-radius:9px; padding:9px 8px; min-height:34px; font-weight:600; }
 QPushButton#choiceChip:checked, QPushButton#formatChip:checked { background:#315fe8; color:white; border-color:#315fe8; }
 QPushButton#choiceChip:disabled, QPushButton#formatChip:disabled { color:#a3aaba; background:#f6f7f9; border-color:#e1e5ec; }
 QPushButton#secondaryAction { background:#f5f7fa; border:1px solid #cbd2de; border-radius:10px; font-weight:600; }
@@ -474,7 +476,9 @@ QLabel#fieldLabel { color:#6e7788; font-size:9pt; margin-top:2px; }
 QListWidget#playlist { background:transparent; border:none; padding:2px; }
 QListWidget#playlist::item { background:transparent; border:none; }
 QListWidget#playlist::item:selected { background:transparent; border:none; }
-QLineEdit, QComboBox, QTableWidget { background:white; border:1px solid #ccd2dd; border-radius:8px; padding:7px; }
+QLineEdit, QComboBox { background:white; border:1px solid #ccd2dd; border-radius:8px; padding:8px 10px; min-height:34px; }
+QScrollArea#rightScroll { background:transparent; border:none; }
+QWidget#rightContent { background:transparent; }
 QHeaderView::section { background:#f6f7f9; color:#586173; padding:7px; border:none; }
 QPushButton { background:#f6f7f9; border:1px solid #ccd2dd; border-radius:8px; padding:8px 13px; }
 QPushButton#primary { background:#315fe8; color:white; border:none; font-weight:600; }
@@ -502,7 +506,7 @@ class MainWindow(QMainWindow):
         self.net = QNetworkAccessManager(self)
 
         self.setWindowTitle(f"{APP_NAME} {APP_VERSION}")
-        self.resize(1250, 840)
+        self.resize(1280, 900)
         self.setMinimumSize(980, 700)
         self.build_ui()
         self.apply_theme()
@@ -584,9 +588,23 @@ class MainWindow(QMainWindow):
         l.addWidget(self.playlist, 1)
 
         right = self.panel()
+        right = QFrame()
+        right.setObjectName("panel")
         right.setMinimumWidth(430)
-        right.setMaximumWidth(500)
-        r = QVBoxLayout(right)
+        right.setMaximumWidth(520)
+        right_outer = QVBoxLayout(right)
+        right_outer.setContentsMargins(0, 0, 0, 0)
+        right_outer.setSpacing(0)
+
+        right_scroll = QScrollArea()
+        right_scroll.setObjectName("rightScroll")
+        right_scroll.setWidgetResizable(True)
+        right_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        right_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        right_content = QWidget()
+        right_content.setObjectName("rightContent")
+        r = QVBoxLayout(right_content)
         r.setContentsMargins(0, 0, 0, 0)
         r.setSpacing(0)
 
@@ -607,7 +625,7 @@ class MainWindow(QMainWindow):
         self.thumb = QLabel("Select a video from the playlist")
         self.thumb.setObjectName("thumbnail")
         self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumb.setFixedHeight(205)
+        self.thumb.setFixedHeight(170)
         self.thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         hero_layout.addWidget(self.thumb)
 
@@ -714,6 +732,8 @@ class MainWindow(QMainWindow):
         abl.addWidget(go, 1)
         r.addWidget(action_bar)
         r.addStretch()
+        right_scroll.setWidget(right_content)
+        right_outer.addWidget(right_scroll)
 
         split.addWidget(left)
         split.addWidget(right)
@@ -741,8 +761,10 @@ class MainWindow(QMainWindow):
         self.queue_layout.setContentsMargins(0, 0, 0, 0)
         self.queue_layout.addStretch()
         self.scroll.setWidget(self.queue_host)
-        self.scroll.setMinimumHeight(165)
+        self.scroll.setMinimumHeight(92)
+        self.scroll.setMaximumHeight(130)
         q.addWidget(self.scroll)
+        queue_panel.setMaximumHeight(185)
         outer.addWidget(queue_panel)
 
         self.statusBar().showMessage("Ready")
@@ -814,7 +836,7 @@ class MainWindow(QMainWindow):
 
     def _playlist_item_size(self):
         from PySide6.QtCore import QSize
-        return QSize(0, 72)
+        return QSize(0, 80)
 
     def playlist_thumbnail_ready(self, reply, row_widget):
         try:
