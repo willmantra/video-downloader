@@ -35,6 +35,10 @@ jobs:
         shell: cmd
         run: python -m PyInstaller --noconfirm --clean --onedir --windowed --name "Video Downloader" --collect-all PIL --add-data "version.txt;." app.py
 
+      - name: Bundle yt-dlp and FFmpeg
+        shell: pwsh
+        run: ./bundle_dependencies.ps1
+
       - name: Install Inno Setup
         shell: powershell
         run: choco install innosetup --yes --no-progress
