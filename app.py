@@ -46,8 +46,26 @@ def default_downloads() -> str:
     return str(Path.home() / "Downloads")
 
 
+def app_root() -> Path:
+    """Return the folder containing the installed application executable."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+def bundled_executable(name: str):
+    """Prefer a dependency bundled beside the installed app."""
+    exe_name = name
+    if os.name == "nt" and not exe_name.lower().endswith(".exe"):
+        exe_name += ".exe"
+    candidate = app_root() / "bin" / exe_name
+    if candidate.is_file():
+        return str(candidate)
+    return None
+
+
 def find_executable(name: str):
-    return shutil.which(name)
+    return bundled_executable(name) or shutil.which(name)
 
 
 class DownloaderApp(tk.Tk):
@@ -250,20 +268,25 @@ class DownloaderApp(tk.Tk):
         self._mode_changed()
 
     def _check_dependencies(self):
+        ytdlp = find_executable("yt-dlp")
+        ffmpeg = find_executable("ffmpeg")
         missing = []
-        if not find_executable("yt-dlp"):
+        if not ytdlp:
             missing.append("yt-dlp")
-        if not find_executable("ffmpeg"):
+        if not ffmpeg:
             missing.append("FFmpeg")
         if missing:
             self._append_log("Missing: " + ", ".join(missing))
             self.status_var.set("Dependency check failed")
             messagebox.showwarning(
                 "Dependency missing",
-                "This app could not find: " + ", ".join(missing) + ".\n\nInstall them or make sure they are available on your Windows PATH, then restart the app.",
+                "This app could not find: " + ", ".join(missing) + ".\n\n"
+                "The installer normally includes these components. Reinstall the latest version, "
+                "or make sure they are available on your Windows PATH, then restart the app.",
             )
         else:
-            self._append_log("yt-dlp and FFmpeg found.")
+            source = "bundled with the app" if bundled_executable("yt-dlp") and bundled_executable("ffmpeg") else "available on Windows"
+            self._append_log(f"yt-dlp and FFmpeg found ({source}).")
         if Image is None:
             self._append_log("Pillow not found: thumbnail images will be disabled until Pillow is installed.")
 
@@ -299,7 +322,11 @@ class DownloaderApp(tk.Tk):
             self._save_settings()
 
     def _base_command(self):
-        cmd = ["yt-dlp", "--newline", "--progress", "--no-colors"]
+        ytdlp = find_executable("yt-dlp") or "yt-dlp"
+        cmd = [ytdlp, "--newline", "--progress", "--no-colors"]
+        ffmpeg = find_executable("ffmpeg")
+        if ffmpeg:
+            cmd += ["--ffmpeg-location", str(Path(ffmpeg).resolve().parent)]
         cookie = self.cookie_file_var.get().strip()
         if cookie:
             cmd += ["--cookies", cookie]
