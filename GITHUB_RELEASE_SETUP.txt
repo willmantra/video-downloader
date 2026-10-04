@@ -6,19 +6,21 @@ Repository:
 
 The app checks the repository's latest GitHub Release for updates.
 
-FIRST RELEASE
-=============
-The source on main is version 0.4.1.
+CURRENT BASELINE
+================
+Version 0.4.2 bundles yt-dlp, FFmpeg and ffprobe inside the installed application.
+Users should not need to install those tools separately or add them to Windows PATH.
 
 Create and push the matching tag:
 
-  git tag v0.4.1
-  git push origin v0.4.1
+  git tag v0.4.2
+  git push origin v0.4.2
 
 The GitHub Actions workflow will then:
 - build the application as a PyInstaller onedir distribution;
-- package that folder with Inno Setup;
-- create VideoDownloaderSetup-0.4.1.exe;
+- download yt-dlp and FFmpeg into the application's bin folder;
+- package the complete folder with Inno Setup;
+- create VideoDownloaderSetup-0.4.2.exe;
 - create a SHA-256 checksum file;
 - publish both files in the GitHub Release.
 
@@ -46,4 +48,5 @@ NOTES
 - The tag MUST match version.txt: version.txt 0.5.0 = tag v0.5.0.
 - The repository must remain public for anonymous update checks.
 - Release builds use PyInstaller onedir rather than onefile.
-- The updater should verify the published SHA-256 checksum before launching an installer.
+- The updater verifies the published SHA-256 checksum before launching an installer.
+- bundle_dependencies.ps1 supplies yt-dlp, ffmpeg.exe and ffprobe.exe for release and local builds.
