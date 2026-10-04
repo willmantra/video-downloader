@@ -31,9 +31,9 @@ jobs:
       - name: Install Python build dependencies
         run: python -m pip install --upgrade pyinstaller Pillow
 
-      - name: Build application EXE
+      - name: Build application folder
         shell: cmd
-        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Video Downloader" --collect-all PIL --add-data "version.txt;." app.py
+        run: python -m PyInstaller --noconfirm --clean --onedir --windowed --name "Video Downloader" --collect-all PIL --add-data "version.txt;." app.py
 
       - name: Install Inno Setup
         shell: powershell
@@ -48,11 +48,19 @@ jobs:
           & $iscc "/DMyAppVersion=$version" installer.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Create GitHub Release and upload installer
+      - name: Create SHA-256 checksum
+        shell: pwsh
+        run: |
+          $version = (Get-Content version.txt -Raw).Trim()
+          $installer = "installer_output\VideoDownloaderSetup-$version.exe"
+          $hash = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLower()
+          "$hash  VideoDownloaderSetup-$version.exe" | Set-Content "$installer.sha256" -Encoding ascii
+
+      - name: Create GitHub Release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           $version = (Get-Content version.txt -Raw).Trim()
           $installer = "installer_output\VideoDownloaderSetup-$version.exe"
-          gh release create "${{ github.ref_name }}" $installer "dist\Video Downloader.exe" --title "Video Downloader $version" --generate-notes
+          gh release create "${{ github.ref_name }}" $installer "$installer.sha256" --title "Video Downloader $version" --generate-notes
