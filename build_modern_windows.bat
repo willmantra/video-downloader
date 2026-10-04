@@ -24,6 +24,10 @@ if errorlevel 1 (
   goto :fail
 )
 
+rem Close any previous dev build so Windows releases files before we rebuild.
+taskkill /IM "Video Downloader 0.5 Dev.exe" /F >nul 2>nul
+timeout /T 1 /NOBREAK >nul
+
 python -m pip install --upgrade -r requirements.txt pyinstaller
 if errorlevel 1 goto :fail
 
@@ -32,6 +36,14 @@ echo Building locally to avoid network-drive file locking issues...
 if exist "%LOCAL_WORK%" rmdir /S /Q "%LOCAL_WORK%"
 if exist "%LOCAL_DIST%" rmdir /S /Q "%LOCAL_DIST%"
 if exist "%LOCAL_SPEC%" rmdir /S /Q "%LOCAL_SPEC%"
+
+if exist "%LOCAL_DIST%" (
+  echo.
+  echo The previous development build is still locked by Windows.
+  echo Close any open Video Downloader 0.5 Dev windows and run this build again.
+  goto :fail
+)
+
 mkdir "%LOCAL_WORK%" >nul 2>nul
 mkdir "%LOCAL_DIST%" >nul 2>nul
 mkdir "%LOCAL_SPEC%" >nul 2>nul
