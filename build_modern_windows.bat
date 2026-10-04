@@ -16,6 +16,7 @@ set "LOCAL_DIST=%LOCAL_BUILD_ROOT%\dist"
 set "LOCAL_SPEC=%LOCAL_BUILD_ROOT%\spec"
 set "LOCAL_CACHE=%LOCAL_BUILD_ROOT%\tool-cache"
 set "TARGET_DIST=%PROJECT_DIR%\dist\Video Downloader 0.5 Dev"
+set "LOCAL_EXE=%LOCAL_DIST%\Video Downloader 0.5 Dev\Video Downloader 0.5 Dev.exe"
 
 where python >nul 2>nul
 if errorlevel 1 (
@@ -69,12 +70,17 @@ if exist "%TARGET_DIST%" rmdir /S /Q "%TARGET_DIST%"
 robocopy "%LOCAL_DIST%\Video Downloader 0.5 Dev" "%TARGET_DIST%" /E /NFL /NDL /NJH /NJS /NP >nul
 if errorlevel 8 goto :fail
 
-set "DEV_EXE=%TARGET_DIST%\Video Downloader 0.5 Dev.exe"
 echo.
 echo Modern development build complete:
 echo %TARGET_DIST%
-echo Launching development build...
-start "" "%DEV_EXE%"
+echo Launching development build from local disk...
+if not exist "%LOCAL_EXE%" (
+  echo Could not find the local development executable:
+  echo %LOCAL_EXE%
+  goto :fail
+)
+
+start "" /D "%LOCAL_DIST%\Video Downloader 0.5 Dev" "%LOCAL_EXE%"
 popd
 exit /b 0
 
