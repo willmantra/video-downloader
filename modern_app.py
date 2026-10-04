@@ -12,7 +12,7 @@ from PySide6.QtGui import QDesktopServices, QPixmap
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QFileDialog, QFrame,
-    QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
+    QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QMessageBox, QPushButton,
     QProgressBar, QScrollArea, QSizePolicy, QSplitter, QListWidget, QListWidgetItem,
     QVBoxLayout, QWidget,
 )
@@ -410,7 +410,10 @@ DARK_STYLE = """
 QWidget { background:#111318; color:#edf0f6; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#0c0e12; }
 QFrame#panel, QFrame#queueCard { background:#171a21; border:1px solid #2a2f3a; border-radius:12px; }
-QFrame#mediaCard, QFrame#optionsCard { background:#13161c; border:1px solid #282e38; border-radius:10px; }
+QFrame#mediaCard, QFrame#optionsCard { background:#13161c; border:1px solid #282e38; border-radius:12px; }
+QFrame#checksPanel { background:#0f1217; border:1px solid #252b35; border-radius:9px; }
+QLabel#eyebrow { color:#7d8ba3; font-size:8pt; font-weight:700; letter-spacing:1px; }
+QComboBox { min-height:28px; }
 QFrame#playlistRow { background:#151820; border:1px solid #282e38; border-radius:10px; }
 QFrame#playlistRow:hover { background:#1d222c; border-color:#3a4352; }
 QLabel#playlistThumb { background:#0b0d11; border:1px solid #303744; border-radius:7px; color:#7f899a; font-weight:700; }
@@ -440,7 +443,10 @@ LIGHT_STYLE = """
 QWidget { background:#f4f6fa; color:#171a21; font-family:'Segoe UI'; font-size:10pt; }
 QMainWindow { background:#eef1f6; }
 QFrame#panel, QFrame#queueCard { background:white; border:1px solid #d8dde7; border-radius:12px; }
-QFrame#mediaCard, QFrame#optionsCard { background:#f9fafc; border:1px solid #dce1ea; border-radius:10px; }
+QFrame#mediaCard, QFrame#optionsCard { background:#f9fafc; border:1px solid #dce1ea; border-radius:12px; }
+QFrame#checksPanel { background:#f3f6fa; border:1px solid #dce1ea; border-radius:9px; }
+QLabel#eyebrow { color:#7a8495; font-size:8pt; font-weight:700; letter-spacing:1px; }
+QComboBox { min-height:28px; }
 QFrame#playlistRow { background:#ffffff; border:1px solid #dce1ea; border-radius:10px; }
 QFrame#playlistRow:hover { background:#f6f8fb; border-color:#c6cedb; }
 QLabel#playlistThumb { background:#e9edf3; border:1px solid #ccd2dd; border-radius:7px; color:#697386; font-weight:700; }
@@ -560,37 +566,48 @@ class MainWindow(QMainWindow):
         l.addWidget(self.playlist, 1)
 
         right = self.panel()
-        right.setMinimumWidth(390)
+        right.setMinimumWidth(430)
         r = QVBoxLayout(right)
-        r.setContentsMargins(12, 12, 12, 12)
-        r.setSpacing(9)
-        r.addWidget(self.label("Preview & options", "section"))
+        r.setContentsMargins(14, 14, 14, 14)
+        r.setSpacing(12)
 
         media = QFrame()
         media.setObjectName("mediaCard")
         media_layout = QVBoxLayout(media)
-        media_layout.setContentsMargins(10, 10, 10, 10)
-        media_layout.setSpacing(7)
+        media_layout.setContentsMargins(12, 12, 12, 12)
+        media_layout.setSpacing(9)
+
+        eyebrow = QLabel("SELECTED ITEM")
+        eyebrow.setObjectName("eyebrow")
+        media_layout.addWidget(eyebrow)
 
         self.thumb = QLabel("Select an item to preview")
         self.thumb.setObjectName("thumbnail")
         self.thumb.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.thumb.setFixedHeight(178)
+        self.thumb.setFixedHeight(215)
         self.thumb.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         media_layout.addWidget(self.thumb)
 
         self.selected_title = QLabel("No item selected")
         self.selected_title.setObjectName("previewTitle")
         self.selected_title.setWordWrap(True)
-        self.selected_title.setMaximumHeight(44)
+        self.selected_title.setMinimumHeight(44)
         media_layout.addWidget(self.selected_title)
         r.addWidget(media)
 
         options_card = QFrame()
         options_card.setObjectName("optionsCard")
         ol = QVBoxLayout(options_card)
-        ol.setContentsMargins(10, 10, 10, 10)
-        ol.setSpacing(5)
+        ol.setContentsMargins(12, 12, 12, 12)
+        ol.setSpacing(9)
+
+        options_head = QHBoxLayout()
+        options_head.addWidget(self.label("Download settings", "section"))
+        options_head.addStretch()
+        hint = QLabel("Best quality by default")
+        hint.setObjectName("muted")
+        options_head.addWidget(hint)
+        ol.addLayout(options_head)
 
         self.mode = QComboBox()
         self.mode.addItems(["Video + audio", "Video only", "Audio only"])
@@ -602,31 +619,51 @@ class MainWindow(QMainWindow):
         self.container.addItems(["Automatic", "MKV", "MP4"])
         self.container.setCurrentText(self.settings.get("container", "Automatic"))
 
-        for title, widget in [
-            ("Download", self.mode), ("Video quality", self.video_quality),
-            ("Audio", self.audio_quality), ("Output format", self.container),
-        ]:
+        grid = QGridLayout()
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(6)
+        fields = [
+            ("Download", self.mode, 0, 0),
+            ("Output format", self.container, 0, 1),
+            ("Video quality", self.video_quality, 1, 0),
+            ("Audio", self.audio_quality, 1, 1),
+        ]
+        for title, widget, row_index, col_index in fields:
+            field = QVBoxLayout()
+            field.setSpacing(4)
             label = QLabel(title)
             label.setObjectName("fieldLabel")
-            ol.addWidget(label)
-            ol.addWidget(widget)
+            field.addWidget(label)
+            field.addWidget(widget)
+            grid.addLayout(field, row_index, col_index)
+        ol.addLayout(grid)
+
+        checks = QFrame()
+        checks.setObjectName("checksPanel")
+        checks_layout = QVBoxLayout(checks)
+        checks_layout.setContentsMargins(10, 8, 10, 8)
+        checks_layout.setSpacing(4)
 
         self.folder_box = QCheckBox("Create folder using playlist title")
         self.folder_box.setChecked(bool(self.settings.get("playlist_folder", True)))
         self.number_box = QCheckBox("Keep original playlist numbering")
         self.number_box.setChecked(bool(self.settings.get("playlist_numbering", True)))
-        ol.addWidget(self.folder_box)
-        ol.addWidget(self.number_box)
+        checks_layout.addWidget(self.folder_box)
+        checks_layout.addWidget(self.number_box)
+        ol.addWidget(checks)
         r.addWidget(options_card)
 
         actions = QHBoxLayout()
+        actions.setSpacing(10)
         add = QPushButton("Add to queue")
+        add.setMinimumHeight(40)
         add.clicked.connect(self.add_to_queue)
         go = QPushButton("Download now")
         go.setObjectName("primary")
+        go.setMinimumHeight(40)
         go.clicked.connect(self.download_now)
-        actions.addWidget(add)
-        actions.addWidget(go)
+        actions.addWidget(add, 1)
+        actions.addWidget(go, 1)
         r.addLayout(actions)
         r.addStretch()
 
